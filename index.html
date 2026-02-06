@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chameleon Rainforest Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
+
+        :root {
+            --tree-width: 260px;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #065f46, #064e3b, #022c22);
+            font-family: 'Quicksand', sans-serif;
+            touch-action: manipulation;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Rainforest Backdrop */
+        .rainforest-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 80%);
+            z-index: 0;
+        }
+
+        /* The Tree World */
+        #scrolling-world {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .tree-trunk {
+            position: absolute;
+            top: -12000px;
+            left: calc(50% - (var(--tree-width) / 2));
+            width: var(--tree-width);
+            height: 24000px;
+            background: linear-gradient(to right, #1a0f0a, #3e2723, #5d4037, #3e2723, #1a0f0a);
+            box-shadow: inset 25px 0 40px rgba(0,0,0,0.6), inset -25px 0 40px rgba(0,0,0,0.6);
+            z-index: 1;
+        }
+
+        .vine {
+            position: absolute;
+            width: 15px;
+            background: #065f46;
+            border-radius: 10px;
+            z-index: 2;
+            opacity: 0.8;
+        }
+
+        .cameo-animal {
+            position: absolute;
+            z-index: 5;
+            font-size: 3rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+
+        /* The Chameleon */
+        #lizard-container {
+            position: absolute;
+            width: 160px;
+            height: 180px;
+            left: 50%;
+            bottom: 35%; /* Adjusted for mobile view */
+            transform: translateX(-50%);
+            z-index: 15;
+            transition: bottom 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .lizard-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.7));
+        }
+
+        /* HUD UI */
+        .hud-top {
+            position: fixed;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .hud-top {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 20px;
+            }
+        }
+
+        .target-image-frame {
+            width: 120px;
+            height: 120px;
+            background: #f0fdf4;
+            border: 6px solid #14532d;
+            border-radius: 20px;
+            padding: 5px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .word-display-container {
+            background: rgba(255, 255, 255, 0.98);
+            border: 4px solid #14532d;
+            border-radius: 15px;
+            padding: 8px 30px;
+            font-size: 2.5rem;
+            font-family: 'Fredoka One', cursive;
+            color: #064e3b;
+            pointer-events: auto;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        #keyboard-wrapper {
+            position: fixed;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        #keyboard-tray {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            width: 95%;
+            max-width: 500px;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .key {
+            width: 40px;
+            height: 50px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #14532d;
+            box-shadow: 0 4px 0 #22c55e;
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+            text-transform: lowercase;
+        }
+
+        .key:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #22c55e;
+            background-color: #f0fdf4;
+        }
+
+        /* Animations */
+        @keyframes chameleon-dance {
+            0%, 100% { transform: translate(-50%, 0) rotate(0deg); }
+            15% { transform: translate(-55%, -40px) rotate(-15deg) scale(1.15); }
+            30% { transform: translate(-45%, 0) rotate(15deg) scale(1.05); }
+            45% { transform: translate(-50%, -50px) rotate(0deg) scale(1.3); }
+            60% { transform: translate(-40%, -20px) rotate(20deg); }
+            75% { transform: translate(-60%, 0) rotate(-20deg); }
+            90% { transform: translate(-50%, -20px) scale(1.2); }
+        }
+
+        @keyframes gas-leak {
+            0%, 100% { transform: translate(-50%, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-54%, 3px) rotate(-4deg); }
+            20%, 40%, 60%, 80% { transform: translate(-46%, -3px) rotate(4deg); }
+        }
+
+        .dancing { animation: chameleon-dance 0.6s infinite ease-in-out; }
+        .farting { animation: gas-leak 0.6s ease-in-out; }
+
+        .fart-cloud {
+            position: absolute;
+            font-size: 50px;
+            pointer-events: none;
+            z-index: 11;
+            animation: drift-away 1.2s forwards;
+        }
+
+        @keyframes drift-away {
+            0% { opacity: 1; transform: translate(40px, 0) scale(0.6); }
+            100% { opacity: 0; transform: translate(100px, -150px) scale(3); }
+        }
+
+        .correct-letter { color: #166534; }
+        .missing-letter { color: #cbd5e1; }
+
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+            text-align: center;
+            z-index: 100;
+            border: 8px solid #22c55e;
+            width: 85%;
+            max-width: 400px;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #14532d;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="game-stage">
+        <div class="rainforest-bg"></div>
+        <div id="scrolling-world">
+            <div class="tree-trunk">
+                <div id="branches-container"></div>
+                <div id="cameo-container"></div>
+                <div id="leaves-container"></div>
+            </div>
+        </div>
+
+        <div id="lizard-container">
+            <svg class="lizard-svg" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#34d399;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#064e3b;stop-opacity:1" />
+                    </linearGradient>
+                    <pattern id="bumpy" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <circle cx="5" cy="5" r="2" fill="#065f46" opacity="0.4"/>
+                    </pattern>
+                </defs>
+                <path d="M100 180 Q140 210 120 240 Q100 255 80 240 Q70 225 90 215" stroke="url(#skinGrad)" stroke-width="18" fill="none" stroke-linecap="round" />
+                <ellipse cx="100" cy="130" rx="48" ry="75" fill="url(#skinGrad)" />
+                <ellipse cx="100" cy="130" rx="48" ry="75" fill="url(#bumpy)" />
+                <path d="M100 60 Q112 130 100 200" stroke="#064e3b" stroke-width="5" fill="none" opacity="0.4" />
+                <g transform="translate(100, 100)">
+                    <path d="M-45 0 L-70 -20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
+                    <path d="M45 0 L70 -20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
+                </g>
+                <g transform="translate(100, 185)">
+                    <path d="M-40 0 L-65 20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
+                    <path d="M40 0 L65 20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
+                </g>
+                <path d="M72 75 Q55 5 100 0 Q145 5 128 75" fill="url(#skinGrad)" />
+                <g transform="translate(80, 42)">
+                    <circle r="14" fill="#065f46" />
+                    <circle r="9" fill="#34d399" />
+                    <circle r="3.5" fill="black" />
+                </g>
+                <g transform="translate(120, 42)">
+                    <circle r="14" fill="#065f46" />
+                    <circle r="9" fill="#34d399" />
+                    <circle r="3.5" fill="black" />
+                </g>
+                <path d="M85 65 Q100 70 115 65" stroke="#022c22" stroke-width="2" fill="none" />
+            </svg>
+        </div>
+
+        <div class="hud-top">
+            <div class="target-image-frame">
+                <div id="loader" class="loader"></div>
+                <img id="word-image" class="w-full h-full object-contain hidden">
+            </div>
+            <div id="word-display" class="word-display-container"></div>
+        </div>
+
+        <div id="keyboard-wrapper">
+            <div id="keyboard-tray"></div>
+        </div>
+    </div>
+
+    <div id="modal">
+        <div class="text-7xl mb-4">🏆</div>
+        <h1 class="text-3xl font-bold text-green-700 mb-2">Well Done!</h1>
+        <p class="text-xl text-gray-600 mb-6">The Chameleon reached the top of the jungle!</p>
+        <button onclick="location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl text-xl font-bold transition shadow-xl active:scale-95">Play Again</button>
+    </div>
+
+    <script>
+        const apiKey = "";
+        const wordsList = [
+            { word: 'frog', prompt: 'a realistic green rainforest frog on a leaf' },
+            { word: 'cat', prompt: 'a cute realistic cat, whimsical style' },
+            { word: 'bird', prompt: 'a colorful tropical parrot, realistic' },
+            { word: 'fish', prompt: 'a bright orange realistic goldfish swimming' },
+            { word: 'log', prompt: 'a realistic mossy tree log in the jungle' },
+            { word: 'rat', prompt: 'a tiny realistic field mouse, cute' }
+        ];
+
+        let currentIndex = 0;
+        let typedText = "";
+        let wordsCorrect = 0;
+        const targetVictory = 6;
+
+        const world = document.getElementById('scrolling-world');
+        const lizard = document.getElementById('lizard-container');
+        const wordDisplay = document.getElementById('word-display');
+        const keyboardTray = document.getElementById('keyboard-tray');
+        const loader = document.getElementById('loader');
+        const wordImg = document.getElementById('word-image');
+        const modal = document.getElementById('modal');
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playRealisticFart() {
+            initAudio();
+            const duration = 0.7;
+            const osc = audioCtx.createOscillator();
+            const noise = audioCtx.createBufferSource();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + duration);
+
+            const bufferSize = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            noise.buffer = buffer;
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(400, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+            osc.connect(filter);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            noise.start();
+            osc.stop(audioCtx.currentTime + duration);
+            noise.stop(audioCtx.currentTime + duration);
+        }
+
+        function playABCLoop() {
+            initAudio();
+            const tempo = 120;
+            const beat = 60 / tempo;
+            const start = audioCtx.currentTime;
+
+            const notes = [
+                { f: 349.23, t: 0, d: 0.3 }, // A (F4)
+                { f: 392.00, t: 0.5, d: 0.3 }, // B (G4)
+                { f: 440.00, t: 1.0, d: 0.5 }, // C (A4)
+                { f: 523.25, t: 1.8, d: 0.15 }, // easy
+                { f: 523.25, t: 2.0, d: 0.15 }, 
+                { f: 523.25, t: 2.2, d: 0.15 },
+                { f: 349.23, t: 2.5, d: 0.3 }, // 1
+                { f: 392.00, t: 3.0, d: 0.3 }, // 2
+                { f: 440.00, t: 3.5, d: 0.6 }  // 3
+            ];
+
+            for (let i = 0; i < 2; i++) {
+                const offset = i * 3.5;
+                notes.forEach(n => {
+                    const osc = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(n.f, start + offset + (n.t * beat));
+                    g.gain.setValueAtTime(0.2, start + offset + (n.t * beat));
+                    g.gain.exponentialRampToValueAtTime(0.001, start + offset + (n.t * beat) + n.d);
+                    osc.connect(g);
+                    g.connect(audioCtx.destination);
+                    osc.start(start + offset + (n.t * beat));
+                    osc.stop(start + offset + (n.t * beat) + n.d);
+                });
+            }
+        }
+
+        const branchesCont = document.getElementById('branches-container');
+        const cameoCont = document.getElementById('cameo-container');
+        const leavesCont = document.getElementById('leaves-container');
+        
+        const animalCameos = [
+            { icon: '🦜', y: -400, side: 'left' },
+            { icon: '🐒', y: -1200, side: 'right' },
+            { icon: '🦎', y: -2000, side: 'left' },
+            { icon: '🦋', y: -800, side: 'right' },
+            { icon: '🐍', y: -1600, side: 'left' },
+            { icon: '🦥', y: -2400, side: 'right' }
+        ];
+
+        for (let i = 0; i < 70; i++) {
+            const y = -i * 240 + 300;
+            const side = i % 2 === 0 ? 'left' : 'right';
+
+            const b = document.createElement('div');
+            b.className = 'vine';
+            b.style.top = `${y}px`;
+            b.style.height = '180px';
+            b.style.width = '20px';
+            b.style.left = side === 'left' ? 'calc(50% - 150px)' : 'calc(50% + 130px)';
+            b.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
+            branchesCont.appendChild(b);
+
+            for (let j = 0; j < 4; j++) {
+                const leaf = document.createElement('div');
+                leaf.style.position = 'absolute';
+                leaf.style.top = `${y + (Math.random() * 80)}px`;
+                leaf.style.left = side === 'left' ? `${Math.random() * 120 - 200 + (window.innerWidth/2)}px` : `${Math.random() * 120 + 80 + (window.innerWidth/2)}px`;
+                leaf.innerHTML = `<svg width="80" height="60" viewBox="0 0 100 70"><path d="M10 35 Q 30 0, 50 0 Q 70 0, 90 35 Q 70 70, 50 70 Q 30 70, 10 35" fill="#065f46" opacity="${0.6 + Math.random() * 0.4}"/></svg>`;
+                leaf.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.6 + Math.random() * 0.6})`;
+                leavesCont.appendChild(leaf);
+            }
+        }
+
+        animalCameos.forEach(c => {
+            const anim = document.createElement('div');
+            anim.className = 'cameo-animal';
+            anim.innerText = c.icon;
+            anim.style.top = `${c.y}px`;
+            anim.style.left = c.side === 'left' ? 'calc(50% - 170px)' : 'calc(50% + 130px)';
+            cameoCont.appendChild(anim);
+        });
+
+        async function fetchNewWord() {
+            typedText = "";
+            renderWord();
+            const current = wordsList[currentIndex];
+            loader.style.display = 'block';
+            wordImg.style.display = 'none';
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instances: [{ prompt: current.prompt }], parameters: { sampleCount: 1 } })
+                });
+                const data = await res.json();
+                if (data.predictions?.[0]?.bytesBase64Encoded) {
+                    wordImg.src = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+                    wordImg.style.display = 'block';
+                    loader.style.display = 'none';
+                }
+            } catch {
+                wordImg.src = `https://via.placeholder.com/120?text=${current.word}`;
+                wordImg.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        }
+
+        function renderWord() {
+            const target = wordsList[currentIndex].word;
+            let html = "";
+            for (let i = 0; i < target.length; i++) {
+                const char = typedText[i] ? target[i] : "_";
+                const cls = typedText[i] ? "correct-letter" : "missing-letter";
+                html += `<span class="${cls}">${char}</span>`;
+            }
+            wordDisplay.innerHTML = html;
+        }
+
+        function createKeyboard() {
+            const alpha = "abcdefghijklmnopqrstuvwxyz".split("");
+            keyboardTray.innerHTML = "";
+            alpha.forEach(l => {
+                const k = document.createElement('div');
+                k.className = 'key';
+                k.innerText = l;
+                k.onclick = (e) => {
+                    e.preventDefault();
+                    handleKey(l);
+                };
+                keyboardTray.appendChild(k);
+            });
+        }
+
+        function handleKey(l) {
+            if (modal.style.display === 'block') return;
+            const target = wordsList[currentIndex].word;
+            const next = target[typedText.length];
+
+            if (l === next) {
+                typedText += l;
+                renderWord();
+                if (typedText === target) success();
+            } else {
+                oops();
+            }
+        }
+
+        function success() {
+            wordsCorrect++;
+            lizard.classList.add('dancing');
+            playABCLoop();
+
+            setTimeout(() => {
+                lizard.classList.remove('dancing');
+                const scrollY = wordsCorrect * 480;
+                world.style.transform = `translateY(${scrollY}px)`;
+
+                if (wordsCorrect >= targetVictory) {
+                    modal.style.display = 'block';
+                    lizard.classList.add('dancing');
+                } else {
+                    currentIndex = (currentIndex + 1) % wordsList.length;
+                    fetchNewWord();
+                }
+            }, 7000);
+        }
+
+        function oops() {
+            lizard.classList.add('farting');
+            playRealisticFart();
+            
+            const cloud = document.createElement('div');
+            cloud.className = 'fart-cloud';
+            cloud.innerText = '💨';
+            lizard.appendChild(cloud);
+
+            setTimeout(() => {
+                lizard.classList.remove('farting');
+                typedText = "";
+                renderWord();
+                setTimeout(() => cloud.remove(), 1500);
+            }, 800);
+        }
+
+        window.onkeydown = (e) => handleKey(e.key.toLowerCase());
+
+        createKeyboard();
+        fetchNewWord();
+    </script>
+</body>
+</html>
