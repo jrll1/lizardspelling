@@ -82,7 +82,7 @@
             width: 160px;
             height: 180px;
             left: 50%;
-            bottom: 35%; /* Adjusted for mobile view */
+            bottom: 35%; 
             transform: translateX(-50%);
             z-index: 15;
             transition: bottom 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -331,12 +331,12 @@
     <script>
         const apiKey = "";
         const wordsList = [
-            { word: 'frog', prompt: 'a realistic green rainforest frog on a leaf' },
-            { word: 'cat', prompt: 'a cute realistic cat, whimsical style' },
-            { word: 'bird', prompt: 'a colorful tropical parrot, realistic' },
-            { word: 'fish', prompt: 'a bright orange realistic goldfish swimming' },
-            { word: 'log', prompt: 'a realistic mossy tree log in the jungle' },
-            { word: 'rat', prompt: 'a tiny realistic field mouse, cute' }
+            { word: 'frog', prompt: 'a realistic green rainforest frog on a leaf', imgData: null },
+            { word: 'cat', prompt: 'a cute realistic cat, whimsical style', imgData: null },
+            { word: 'bird', prompt: 'a colorful tropical parrot, realistic', imgData: null },
+            { word: 'fish', prompt: 'a bright orange realistic goldfish swimming', imgData: null },
+            { word: 'log', prompt: 'a realistic mossy tree log in the jungle', imgData: null },
+            { word: 'rat', prompt: 'a tiny realistic field mouse, cute', imgData: null }
         ];
 
         let currentIndex = 0;
@@ -427,10 +427,10 @@
             }
         }
 
+        // Environment Setup
         const branchesCont = document.getElementById('branches-container');
         const cameoCont = document.getElementById('cameo-container');
         const leavesCont = document.getElementById('leaves-container');
-        
         const animalCameos = [
             { icon: '🦜', y: -400, side: 'left' },
             { icon: '🐒', y: -1200, side: 'right' },
@@ -443,7 +443,6 @@
         for (let i = 0; i < 70; i++) {
             const y = -i * 240 + 300;
             const side = i % 2 === 0 ? 'left' : 'right';
-
             const b = document.createElement('div');
             b.className = 'vine';
             b.style.top = `${y}px`;
@@ -452,7 +451,6 @@
             b.style.left = side === 'left' ? 'calc(50% - 150px)' : 'calc(50% + 130px)';
             b.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
             branchesCont.appendChild(b);
-
             for (let j = 0; j < 4; j++) {
                 const leaf = document.createElement('div');
                 leaf.style.position = 'absolute';
@@ -473,30 +471,66 @@
             cameoCont.appendChild(anim);
         });
 
-        async function fetchNewWord() {
+        // Exponential Backoff Fetch
+        const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
+            for (let i = 0; i <= retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (!res.ok) {
+                        if (i === retries) throw new Error(`HTTP ${res.status}`);
+                        await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
+                        continue;
+                    }
+                    const text = await res.text();
+                    if (!text) throw new Error('Empty response');
+                    return JSON.parse(text);
+                } catch (err) {
+                    if (i === retries) throw err;
+                    await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
+                }
+            }
+        };
+
+        // Optimization: Background Loading System
+        async function preloadImage(index) {
+            if (index >= wordsList.length || wordsList[index].imgData) return;
+            const wordObj = wordsList[index];
+            try {
+                const data = await fetchWithRetry(
+                    `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            instances: { prompt: wordObj.prompt }, 
+                            parameters: { sampleCount: 1 } 
+                        })
+                    }
+                );
+                if (data.predictions?.[0]?.bytesBase64Encoded) {
+                    wordObj.imgData = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+                }
+            } catch (err) {
+                wordObj.imgData = `https://via.placeholder.com/120?text=${wordObj.word}`;
+            }
+        }
+
+        async function showWord() {
             typedText = "";
             renderWord();
             const current = wordsList[currentIndex];
-            loader.style.display = 'block';
-            wordImg.style.display = 'none';
-
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ instances: [{ prompt: current.prompt }], parameters: { sampleCount: 1 } })
-                });
-                const data = await res.json();
-                if (data.predictions?.[0]?.bytesBase64Encoded) {
-                    wordImg.src = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
-                    wordImg.style.display = 'block';
-                    loader.style.display = 'none';
-                }
-            } catch {
-                wordImg.src = `https://via.placeholder.com/120?text=${current.word}`;
-                wordImg.style.display = 'block';
-                loader.style.display = 'none';
+            
+            if (!current.imgData) {
+                loader.style.display = 'block';
+                wordImg.style.display = 'none';
+                await preloadImage(currentIndex);
             }
+            
+            wordImg.src = current.imgData;
+            wordImg.style.display = 'block';
+            loader.style.display = 'none';
+
+            preloadImage(currentIndex + 1);
         }
 
         function renderWord() {
@@ -544,6 +578,10 @@
             lizard.classList.add('dancing');
             playABCLoop();
 
+            if (wordsCorrect < targetVictory) {
+                preloadImage(currentIndex + 1);
+            }
+
             setTimeout(() => {
                 lizard.classList.remove('dancing');
                 const scrollY = wordsCorrect * 480;
@@ -554,7 +592,7 @@
                     lizard.classList.add('dancing');
                 } else {
                     currentIndex = (currentIndex + 1) % wordsList.length;
-                    fetchNewWord();
+                    showWord();
                 }
             }, 7000);
         }
@@ -562,12 +600,10 @@
         function oops() {
             lizard.classList.add('farting');
             playRealisticFart();
-            
             const cloud = document.createElement('div');
             cloud.className = 'fart-cloud';
             cloud.innerText = '💨';
             lizard.appendChild(cloud);
-
             setTimeout(() => {
                 lizard.classList.remove('farting');
                 typedText = "";
@@ -579,7 +615,7 @@
         window.onkeydown = (e) => handleKey(e.key.toLowerCase());
 
         createKeyboard();
-        fetchNewWord();
+        showWord();
     </script>
 </body>
 </html>
