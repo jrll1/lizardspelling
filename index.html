@@ -311,7 +311,7 @@
         <div class="hud-top">
             <div class="target-image-frame">
                 <div id="loader" class="loader"></div>
-                <img id="word-image" class="w-full h-full object-contain hidden">
+                <img id="word-image" class="w-full h-full object-contain hidden" alt="Target word image">
             </div>
             <div id="word-display" class="word-display-container"></div>
         </div>
@@ -330,13 +330,45 @@
 
     <script>
         const apiKey = "";
+        
+        // Words with Static Fallbacks for GitHub compatibility
         const wordsList = [
-            { word: 'frog', prompt: 'a realistic green rainforest frog on a leaf', imgData: null },
-            { word: 'cat', prompt: 'a cute realistic cat, whimsical style', imgData: null },
-            { word: 'bird', prompt: 'a colorful tropical parrot, realistic', imgData: null },
-            { word: 'fish', prompt: 'a bright orange realistic goldfish swimming', imgData: null },
-            { word: 'log', prompt: 'a realistic mossy tree log in the jungle', imgData: null },
-            { word: 'rat', prompt: 'a tiny realistic field mouse, cute', imgData: null }
+            { 
+                word: 'frog', 
+                prompt: 'a realistic green rainforest frog on a leaf', 
+                fallback: 'https://images.unsplash.com/photo-1551021448-60146030c681?auto=format&fit=crop&w=300&q=80',
+                imgData: null 
+            },
+            { 
+                word: 'cat', 
+                prompt: 'a cute realistic cat, whimsical style', 
+                fallback: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=80',
+                imgData: null 
+            },
+            { 
+                word: 'bird', 
+                prompt: 'a colorful tropical parrot, realistic', 
+                fallback: 'https://images.unsplash.com/photo-1552728089-57bdde30ebe3?auto=format&fit=crop&w=300&q=80',
+                imgData: null 
+            },
+            { 
+                word: 'fish', 
+                prompt: 'a bright orange realistic goldfish swimming', 
+                fallback: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=300&q=80',
+                imgData: null 
+            },
+            { 
+                word: 'log', 
+                prompt: 'a realistic mossy tree log in the jungle', 
+                fallback: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=300&q=80',
+                imgData: null 
+            },
+            { 
+                word: 'rat', 
+                prompt: 'a tiny realistic field mouse, cute', 
+                fallback: 'https://images.unsplash.com/photo-1558223604-06d912952861?auto=format&fit=crop&w=300&q=80',
+                imgData: null 
+            }
         ];
 
         let currentIndex = 0;
@@ -471,7 +503,6 @@
             cameoCont.appendChild(anim);
         });
 
-        // Exponential Backoff Fetch
         const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
             for (let i = 0; i <= retries; i++) {
                 try {
@@ -491,10 +522,16 @@
             }
         };
 
-        // Optimization: Background Loading System
         async function preloadImage(index) {
             if (index >= wordsList.length || wordsList[index].imgData) return;
             const wordObj = wordsList[index];
+
+            // If no API key is provided, skip the AI fetch and use fallback immediately
+            if (!apiKey) {
+                wordObj.imgData = wordObj.fallback;
+                return;
+            }
+
             try {
                 const data = await fetchWithRetry(
                     `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
@@ -509,9 +546,12 @@
                 );
                 if (data.predictions?.[0]?.bytesBase64Encoded) {
                     wordObj.imgData = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+                } else {
+                    throw new Error('Malformed AI response');
                 }
             } catch (err) {
-                wordObj.imgData = `https://via.placeholder.com/120?text=${wordObj.word}`;
+                console.warn("AI generation failed, using static fallback:", err);
+                wordObj.imgData = wordObj.fallback;
             }
         }
 
@@ -527,6 +567,7 @@
             }
             
             wordImg.src = current.imgData;
+            wordImg.alt = "Help the chameleon spell: " + current.word;
             wordImg.style.display = 'block';
             loader.style.display = 'none';
 
