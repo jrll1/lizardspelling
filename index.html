@@ -2,661 +2,416 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chameleon Rainforest Adventure</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chameleon Climb: Spelling Safari</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
-
-        :root {
-            --tree-width: 260px;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap');
+        
         body {
-            margin: 0;
+            font-family: 'Lexend', sans-serif;
+            background: #061d12;
             overflow: hidden;
-            background: linear-gradient(to bottom, #065f46, #064e3b, #022c22);
-            font-family: 'Quicksand', sans-serif;
             touch-action: manipulation;
-            height: 100vh;
-            width: 100vw;
         }
 
-        #game-stage {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        /* Rainforest Backdrop */
         .rainforest-bg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 80%);
-            z-index: 0;
-        }
-
-        /* The Tree World */
-        #scrolling-world {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: linear-gradient(to bottom, #1a472a, #0d2b1d);
         }
 
         .tree-trunk {
-            position: absolute;
-            top: -12000px;
-            left: calc(50% - (var(--tree-width) / 2));
-            width: var(--tree-width);
-            height: 24000px;
-            background: linear-gradient(to right, #1a0f0a, #3e2723, #5d4037, #3e2723, #1a0f0a);
-            box-shadow: inset 25px 0 40px rgba(0,0,0,0.6), inset -25px 0 40px rgba(0,0,0,0.6);
-            z-index: 1;
+            width: 90px;
+            background: linear-gradient(90deg, #3d2b1f 0%, #5d4037 50%, #3d2b1f 100%);
+            position: relative;
+            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
         }
 
-        .vine {
+        .tree-trunk::after {
+            content: '';
             position: absolute;
-            width: 15px;
-            background: #065f46;
-            border-radius: 10px;
-            z-index: 2;
-            opacity: 0.8;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.2'/%3E%3C/svg%3E");
+            opacity: 0.3;
         }
 
-        .cameo-animal {
+        .leaf {
             position: absolute;
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            border-radius: 100% 0 100% 0;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
             z-index: 5;
-            font-size: 3rem;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
         }
 
-        /* The Chameleon */
-        #lizard-container {
-            position: absolute;
-            width: 160px;
-            height: 180px;
-            left: 50%;
-            bottom: 35%; 
-            transform: translateX(-50%);
-            z-index: 15;
-            transition: bottom 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .lizard {
+            transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(4px 4px 6px rgba(0,0,0,0.5));
+            transform-origin: center bottom;
         }
 
-        .lizard-svg {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.7));
+        .dancing {
+            animation: dance 0.6s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
         }
 
-        /* HUD UI */
-        .hud-top {
-            position: fixed;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            padding: 0 10px;
-            z-index: 40;
-            pointer-events: none;
+        @keyframes dance {
+            0% { transform: translateX(-50%) translateY(0) rotate(-5deg) scale(1.1); }
+            100% { transform: translateX(-50%) translateY(-10px) rotate(5deg) scale(1.2); }
         }
-
-        @media (min-width: 768px) {
-            .hud-top {
-                flex-direction: row;
-                justify-content: space-between;
-                padding: 20px;
-            }
-        }
-
-        .target-image-frame {
-            width: 120px;
-            height: 120px;
-            background: #f0fdf4;
-            border: 6px solid #14532d;
-            border-radius: 20px;
-            padding: 5px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-        }
-
-        .word-display-container {
-            background: rgba(255, 255, 255, 0.98);
-            border: 4px solid #14532d;
-            border-radius: 15px;
-            padding: 8px 30px;
-            font-size: 2.5rem;
-            font-family: 'Fredoka One', cursive;
-            color: #064e3b;
-            pointer-events: auto;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        }
-
-        #keyboard-wrapper {
-            position: fixed;
-            bottom: 15px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            z-index: 40;
-            pointer-events: none;
-        }
-
-        #keyboard-tray {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            padding: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 6px;
-            border-radius: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            width: 95%;
-            max-width: 500px;
-            pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .key {
-            width: 40px;
-            height: 50px;
-            background: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #14532d;
-            box-shadow: 0 4px 0 #22c55e;
-            cursor: pointer;
-            transition: all 0.1s;
-            user-select: none;
-            text-transform: lowercase;
-        }
-
-        .key:active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 #22c55e;
-            background-color: #f0fdf4;
-        }
-
-        /* Animations */
-        @keyframes chameleon-dance {
-            0%, 100% { transform: translate(-50%, 0) rotate(0deg); }
-            15% { transform: translate(-55%, -40px) rotate(-15deg) scale(1.15); }
-            30% { transform: translate(-45%, 0) rotate(15deg) scale(1.05); }
-            45% { transform: translate(-50%, -50px) rotate(0deg) scale(1.3); }
-            60% { transform: translate(-40%, -20px) rotate(20deg); }
-            75% { transform: translate(-60%, 0) rotate(-20deg); }
-            90% { transform: translate(-50%, -20px) scale(1.2); }
-        }
-
-        @keyframes gas-leak {
-            0%, 100% { transform: translate(-50%, 0); }
-            10%, 30%, 50%, 70%, 90% { transform: translate(-54%, 3px) rotate(-4deg); }
-            20%, 40%, 60%, 80% { transform: translate(-46%, -3px) rotate(4deg); }
-        }
-
-        .dancing { animation: chameleon-dance 0.6s infinite ease-in-out; }
-        .farting { animation: gas-leak 0.6s ease-in-out; }
 
         .fart-cloud {
+            animation: poof 0.8s ease-out forwards;
             position: absolute;
-            font-size: 50px;
             pointer-events: none;
-            z-index: 11;
-            animation: drift-away 1.2s forwards;
+            z-index: 40;
         }
 
-        @keyframes drift-away {
-            0% { opacity: 1; transform: translate(40px, 0) scale(0.6); }
-            100% { opacity: 0; transform: translate(100px, -150px) scale(3); }
+        @keyframes poof {
+            0% { transform: scale(0.5); opacity: 0; }
+            30% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
         }
 
-        .correct-letter { color: #166534; }
-        .missing-letter { color: #cbd5e1; }
-
-        #modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-            text-align: center;
-            z-index: 100;
-            border: 8px solid #22c55e;
-            width: 85%;
-            max-width: 400px;
+        .keyboard-key {
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.1s;
         }
 
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #14532d;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            animation: spin 1s linear infinite;
+        .keyboard-key:active {
+            transform: scale(0.9) translateY(2px);
+            background-color: #10b981;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .chameleon-skin {
+            fill: #4ade80;
+            transition: fill 0.5s;
+        }
+
+        /* Subtle "breathing" effect for the chameleon */
+        .lizard-svg {
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col md:flex-row items-stretch text-white">
 
-    <div id="game-stage">
-        <div class="rainforest-bg"></div>
-        <div id="scrolling-world">
-            <div class="tree-trunk">
-                <div id="branches-container"></div>
-                <div id="cameo-container"></div>
-                <div id="leaves-container"></div>
+    <!-- Game World -->
+    <div class="relative flex-1 rainforest-bg overflow-hidden flex justify-center">
+        <!-- The Tree -->
+        <div class="tree-trunk h-full">
+            <!-- Decorative Leaves -->
+            <div class="leaf w-24 h-12 top-10 -left-16 rotate-12"></div>
+            <div class="leaf w-28 h-14 top-1/4 -right-20 -rotate-45"></div>
+            <div class="leaf w-20 h-10 top-1/2 -left-14 rotate-45"></div>
+            <div class="leaf w-32 h-16 top-3/4 -right-24 rotate-12"></div>
+            <div class="leaf w-24 h-12 top-[90%] -left-16 -rotate-12"></div>
+            
+            <!-- Other Animals -->
+            <div class="absolute top-[18%] -left-20 text-5xl opacity-90 drop-shadow-lg" title="Parrot">🦜</div>
+            <div class="absolute top-[48%] -right-18 text-5xl opacity-90 drop-shadow-lg" title="Monkey">🐒</div>
+            <div class="absolute top-[78%] -left-18 text-5xl opacity-90 drop-shadow-lg" title="Snake">🐍</div>
+
+            <!-- The Detailed Chameleon -->
+            <div id="lizard" class="lizard absolute left-1/2 -translate-x-1/2 z-20" style="bottom: 60px;">
+                <svg class="lizard-svg" width="100" height="80" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Tail (Spiral) -->
+                    <path id="tail" d="M85,55 Q115,55 115,75 Q115,95 95,95 Q75,95 75,80 Q75,68 88,68 Q95,68 95,78" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" />
+                    
+                    <!-- Back Feet -->
+                    <path d="M70,55 L75,75 Q77,80 85,80" fill="none" stroke="#15803d" stroke-width="5" stroke-linecap="round" />
+                    
+                    <!-- Body (High Arched Back) -->
+                    <path class="chameleon-skin" d="M25,60 Q55,10 85,55 L85,65 Q55,75 25,65 Z" stroke="#15803d" stroke-width="2" />
+                    
+                    <!-- Skin Patterns (Spots) -->
+                    <circle cx="45" cy="40" r="3" fill="#22c55e" opacity="0.6" />
+                    <circle cx="55" cy="30" r="4" fill="#22c55e" opacity="0.6" />
+                    <circle cx="65" cy="35" r="3" fill="#22c55e" opacity="0.6" />
+
+                    <!-- Front Feet -->
+                    <path d="M40,65 L35,80 Q33,85 25,85" fill="none" stroke="#15803d" stroke-width="5" stroke-linecap="round" />
+                    
+                    <!-- Head with Casque (Crest) -->
+                    <path class="chameleon-skin" d="M30,62 L5,68 L2,48 L15,30 Q28,25 35,45 Z" stroke="#15803d" stroke-width="2" />
+                    
+                    <!-- Bulging Turret Eye -->
+                    <g transform="translate(18, 52)">
+                        <circle r="8" fill="#4ade80" stroke="#15803d" stroke-width="1" />
+                        <circle r="3" fill="black" />
+                        <circle cx="-1" cy="-1" r="1" fill="white" opacity="0.5" />
+                    </g>
+                </svg>
             </div>
         </div>
 
-        <div id="lizard-container">
-            <svg class="lizard-svg" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#34d399;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#064e3b;stop-opacity:1" />
-                    </linearGradient>
-                    <pattern id="bumpy" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-                        <circle cx="5" cy="5" r="2" fill="#065f46" opacity="0.4"/>
-                    </pattern>
-                </defs>
-                <path d="M100 180 Q140 210 120 240 Q100 255 80 240 Q70 225 90 215" stroke="url(#skinGrad)" stroke-width="18" fill="none" stroke-linecap="round" />
-                <ellipse cx="100" cy="130" rx="48" ry="75" fill="url(#skinGrad)" />
-                <ellipse cx="100" cy="130" rx="48" ry="75" fill="url(#bumpy)" />
-                <path d="M100 60 Q112 130 100 200" stroke="#064e3b" stroke-width="5" fill="none" opacity="0.4" />
-                <g transform="translate(100, 100)">
-                    <path d="M-45 0 L-70 -20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
-                    <path d="M45 0 L70 -20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
-                </g>
-                <g transform="translate(100, 185)">
-                    <path d="M-40 0 L-65 20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
-                    <path d="M40 0 L65 20" stroke="#064e3b" stroke-width="14" fill="none" stroke-linecap="round" />
-                </g>
-                <path d="M72 75 Q55 5 100 0 Q145 5 128 75" fill="url(#skinGrad)" />
-                <g transform="translate(80, 42)">
-                    <circle r="14" fill="#065f46" />
-                    <circle r="9" fill="#34d399" />
-                    <circle r="3.5" fill="black" />
-                </g>
-                <g transform="translate(120, 42)">
-                    <circle r="14" fill="#065f46" />
-                    <circle r="9" fill="#34d399" />
-                    <circle r="3.5" fill="black" />
-                </g>
-                <path d="M85 65 Q100 70 115 65" stroke="#022c22" stroke-width="2" fill="none" />
-            </svg>
-        </div>
+        <!-- Sunlight overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-yellow-400/10 pointer-events-none"></div>
+    </div>
 
-        <div class="hud-top">
-            <div class="target-image-frame">
-                <div id="loader" class="loader"></div>
-                <img id="word-image" class="w-full h-full object-contain hidden" alt="Target word image">
+    <!-- UI Panel -->
+    <div class="flex-none w-full md:w-[450px] bg-slate-900 border-t-4 md:border-t-0 md:border-l-4 border-emerald-500 p-6 flex flex-col gap-6 items-center shadow-2xl relative z-30">
+        
+        <!-- Word Preview Area -->
+        <div class="bg-white/5 border border-white/10 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-4 shadow-inner">
+            <div id="word-image" class="text-9xl mb-2 filter drop-shadow-2xl animate-pulse">🐱</div>
+            <div id="spelling-area" class="flex gap-3 h-16 items-center justify-center">
+                <!-- Word slots will be injected here -->
             </div>
-            <div id="word-display" class="word-display-container"></div>
         </div>
 
-        <div id="keyboard-wrapper">
-            <div id="keyboard-tray"></div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 rounded-full h-5 p-1 border border-white/10 shadow-lg">
+            <div id="progress-fill" class="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 rounded-full w-0 transition-all duration-700 ease-out"></div>
+        </div>
+
+        <!-- Keyboard Area -->
+        <div class="grid grid-cols-7 gap-2 w-full max-w-[400px]">
+            <!-- Keys will be generated by JS -->
+        </div>
+
+        <div id="feedback-msg" class="h-8 text-yellow-400 font-bold text-2xl tracking-wide transition-all duration-300 opacity-0 transform translate-y-2">
+            Perfect!
         </div>
     </div>
 
-    <div id="modal">
-        <div class="text-7xl mb-4">🏆</div>
-        <h1 class="text-3xl font-bold text-green-700 mb-2">Well Done!</h1>
-        <p class="text-xl text-gray-600 mb-6">The Chameleon reached the top of the jungle!</p>
-        <button onclick="location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl text-xl font-bold transition shadow-xl active:scale-95">Play Again</button>
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-12 rounded-[3rem] text-center shadow-[0_0_100px_rgba(52,211,153,0.3)] border-4 border-yellow-400 max-w-sm mx-4">
+            <div class="text-7xl mb-6 animate-bounce">👑</div>
+            <h2 class="text-5xl font-black mb-4 text-yellow-300 drop-shadow-md">WELL DONE!</h2>
+            <p class="text-xl mb-8 font-medium">You reached the top of the tree!</p>
+            <button onclick="location.reload()" class="bg-yellow-400 text-slate-900 px-10 py-5 rounded-2xl font-black text-2xl hover:bg-yellow-300 transform transition hover:scale-105 shadow-[0_10px_0_#ca8a04] active:translate-y-1 active:shadow-none">Play Again</button>
+        </div>
     </div>
 
     <script>
-        const apiKey = "";
-        
-        // Words with Static Fallbacks for GitHub compatibility
-        const wordsList = [
-            { 
-                word: 'frog', 
-                prompt: 'a realistic green rainforest frog on a leaf', 
-                fallback: 'https://images.unsplash.com/photo-1551021448-60146030c681?auto=format&fit=crop&w=300&q=80',
-                imgData: null 
-            },
-            { 
-                word: 'cat', 
-                prompt: 'a cute realistic cat, whimsical style', 
-                fallback: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=80',
-                imgData: null 
-            },
-            { 
-                word: 'bird', 
-                prompt: 'a colorful tropical parrot, realistic', 
-                fallback: 'https://images.unsplash.com/photo-1552728089-57bdde30ebe3?auto=format&fit=crop&w=300&q=80',
-                imgData: null 
-            },
-            { 
-                word: 'fish', 
-                prompt: 'a bright orange realistic goldfish swimming', 
-                fallback: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=300&q=80',
-                imgData: null 
-            },
-            { 
-                word: 'log', 
-                prompt: 'a realistic mossy tree log in the jungle', 
-                fallback: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=300&q=80',
-                imgData: null 
-            },
-            { 
-                word: 'rat', 
-                prompt: 'a tiny realistic field mouse, cute', 
-                fallback: 'https://images.unsplash.com/photo-1558223604-06d912952861?auto=format&fit=crop&w=300&q=80',
-                imgData: null 
-            }
+        const words = [
+            { word: 'cat', icon: '🐱' },
+            { word: 'dog', icon: '🐶' },
+            { word: 'rat', icon: '🐀' },
+            { word: 'bat', icon: '🦇' },
+            { word: 'fish', icon: '🐟' },
+            { word: 'frog', icon: '🐸' },
+            { word: 'pig', icon: '🐷' },
+            { word: 'log', icon: '🪵' },
+            { word: 'bug', icon: '🪲' },
+            { word: 'bird', icon: '🐦' },
+            { word: 'sun', icon: '☀️' },
+            { word: 'hat', icon: '👒' }
         ];
 
-        let currentIndex = 0;
-        let typedText = "";
-        let wordsCorrect = 0;
-        const targetVictory = 6;
+        let currentWordIndex = 0;
+        let userInput = "";
+        let score = 0;
+        const targetScore = 6;
+        let shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
-        const world = document.getElementById('scrolling-world');
-        const lizard = document.getElementById('lizard-container');
-        const wordDisplay = document.getElementById('word-display');
-        const keyboardTray = document.getElementById('keyboard-tray');
-        const loader = document.getElementById('loader');
-        const wordImg = document.getElementById('word-image');
-        const modal = document.getElementById('modal');
+        // Audio Context Setup
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
 
-        let audioCtx;
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playRealisticFart() {
-            initAudio();
-            const duration = 0.7;
+        function playFartSound() {
             const osc = audioCtx.createOscillator();
-            const noise = audioCtx.createBufferSource();
             const gain = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(90, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + duration);
-
-            const bufferSize = audioCtx.sampleRate * duration;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-            noise.buffer = buffer;
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(400, audioCtx.currentTime);
-
+            
+            // Frequency drop for "realistic" effect
+            osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+            
             gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-
-            osc.connect(filter);
-            noise.connect(filter);
-            filter.connect(gain);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.connect(gain);
             gain.connect(audioCtx.destination);
-
             osc.start();
-            noise.start();
-            osc.stop(audioCtx.currentTime + duration);
-            noise.stop(audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + 0.5);
+
+            createFartCloud();
         }
 
-        function playABCLoop() {
-            initAudio();
-            const tempo = 120;
-            const beat = 60 / tempo;
-            const start = audioCtx.currentTime;
-
+        function playCelebrationMelody() {
+            // Simplified "ABC" style melody
             const notes = [
-                { f: 349.23, t: 0, d: 0.3 }, // A (F4)
-                { f: 392.00, t: 0.5, d: 0.3 }, // B (G4)
-                { f: 440.00, t: 1.0, d: 0.5 }, // C (A4)
-                { f: 523.25, t: 1.8, d: 0.15 }, // easy
-                { f: 523.25, t: 2.0, d: 0.15 }, 
-                { f: 523.25, t: 2.2, d: 0.15 },
-                { f: 349.23, t: 2.5, d: 0.3 }, // 1
-                { f: 392.00, t: 3.0, d: 0.3 }, // 2
-                { f: 440.00, t: 3.5, d: 0.6 }  // 3
+                { f: 261.63, t: 0 }, { f: 261.63, t: 0.25 }, { f: 392.00, t: 0.5 }, 
+                { f: 392.00, t: 0.75 }, { f: 440.00, t: 1.0 }, { f: 440.00, t: 1.25 }, 
+                { f: 392.00, t: 1.5 }
             ];
-
-            for (let i = 0; i < 2; i++) {
-                const offset = i * 3.5;
-                notes.forEach(n => {
-                    const osc = audioCtx.createOscillator();
-                    const g = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(n.f, start + offset + (n.t * beat));
-                    g.gain.setValueAtTime(0.2, start + offset + (n.t * beat));
-                    g.gain.exponentialRampToValueAtTime(0.001, start + offset + (n.t * beat) + n.d);
-                    osc.connect(g);
-                    g.connect(audioCtx.destination);
-                    osc.start(start + offset + (n.t * beat));
-                    osc.stop(start + offset + (n.t * beat) + n.d);
-                });
-            }
-        }
-
-        // Environment Setup
-        const branchesCont = document.getElementById('branches-container');
-        const cameoCont = document.getElementById('cameo-container');
-        const leavesCont = document.getElementById('leaves-container');
-        const animalCameos = [
-            { icon: '🦜', y: -400, side: 'left' },
-            { icon: '🐒', y: -1200, side: 'right' },
-            { icon: '🦎', y: -2000, side: 'left' },
-            { icon: '🦋', y: -800, side: 'right' },
-            { icon: '🐍', y: -1600, side: 'left' },
-            { icon: '🦥', y: -2400, side: 'right' }
-        ];
-
-        for (let i = 0; i < 70; i++) {
-            const y = -i * 240 + 300;
-            const side = i % 2 === 0 ? 'left' : 'right';
-            const b = document.createElement('div');
-            b.className = 'vine';
-            b.style.top = `${y}px`;
-            b.style.height = '180px';
-            b.style.width = '20px';
-            b.style.left = side === 'left' ? 'calc(50% - 150px)' : 'calc(50% + 130px)';
-            b.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
-            branchesCont.appendChild(b);
-            for (let j = 0; j < 4; j++) {
-                const leaf = document.createElement('div');
-                leaf.style.position = 'absolute';
-                leaf.style.top = `${y + (Math.random() * 80)}px`;
-                leaf.style.left = side === 'left' ? `${Math.random() * 120 - 200 + (window.innerWidth/2)}px` : `${Math.random() * 120 + 80 + (window.innerWidth/2)}px`;
-                leaf.innerHTML = `<svg width="80" height="60" viewBox="0 0 100 70"><path d="M10 35 Q 30 0, 50 0 Q 70 0, 90 35 Q 70 70, 50 70 Q 30 70, 10 35" fill="#065f46" opacity="${0.6 + Math.random() * 0.4}"/></svg>`;
-                leaf.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.6 + Math.random() * 0.6})`;
-                leavesCont.appendChild(leaf);
-            }
-        }
-
-        animalCameos.forEach(c => {
-            const anim = document.createElement('div');
-            anim.className = 'cameo-animal';
-            anim.innerText = c.icon;
-            anim.style.top = `${c.y}px`;
-            anim.style.left = c.side === 'left' ? 'calc(50% - 170px)' : 'calc(50% + 130px)';
-            cameoCont.appendChild(anim);
-        });
-
-        const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
-            for (let i = 0; i <= retries; i++) {
-                try {
-                    const res = await fetch(url, options);
-                    if (!res.ok) {
-                        if (i === retries) throw new Error(`HTTP ${res.status}`);
-                        await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
-                        continue;
-                    }
-                    const text = await res.text();
-                    if (!text) throw new Error('Empty response');
-                    return JSON.parse(text);
-                } catch (err) {
-                    if (i === retries) throw err;
-                    await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
-                }
-            }
-        };
-
-        async function preloadImage(index) {
-            if (index >= wordsList.length || wordsList[index].imgData) return;
-            const wordObj = wordsList[index];
-
-            // If no API key is provided, skip the AI fetch and use fallback immediately
-            if (!apiKey) {
-                wordObj.imgData = wordObj.fallback;
-                return;
-            }
-
-            try {
-                const data = await fetchWithRetry(
-                    `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            instances: { prompt: wordObj.prompt }, 
-                            parameters: { sampleCount: 1 } 
-                        })
-                    }
-                );
-                if (data.predictions?.[0]?.bytesBase64Encoded) {
-                    wordObj.imgData = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
-                } else {
-                    throw new Error('Malformed AI response');
-                }
-            } catch (err) {
-                console.warn("AI generation failed, using static fallback:", err);
-                wordObj.imgData = wordObj.fallback;
-            }
-        }
-
-        async function showWord() {
-            typedText = "";
-            renderWord();
-            const current = wordsList[currentIndex];
             
-            if (!current.imgData) {
-                loader.style.display = 'block';
-                wordImg.style.display = 'none';
-                await preloadImage(currentIndex);
-            }
-            
-            wordImg.src = current.imgData;
-            wordImg.alt = "Help the chameleon spell: " + current.word;
-            wordImg.style.display = 'block';
-            loader.style.display = 'none';
-
-            preloadImage(currentIndex + 1);
-        }
-
-        function renderWord() {
-            const target = wordsList[currentIndex].word;
-            let html = "";
-            for (let i = 0; i < target.length; i++) {
-                const char = typedText[i] ? target[i] : "_";
-                const cls = typedText[i] ? "correct-letter" : "missing-letter";
-                html += `<span class="${cls}">${char}</span>`;
-            }
-            wordDisplay.innerHTML = html;
-        }
-
-        function createKeyboard() {
-            const alpha = "abcdefghijklmnopqrstuvwxyz".split("");
-            keyboardTray.innerHTML = "";
-            alpha.forEach(l => {
-                const k = document.createElement('div');
-                k.className = 'key';
-                k.innerText = l;
-                k.onclick = (e) => {
-                    e.preventDefault();
-                    handleKey(l);
-                };
-                keyboardTray.appendChild(k);
+            notes.forEach(n => {
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, audioCtx.currentTime + n.t);
+                g.gain.setValueAtTime(0, audioCtx.currentTime + n.t);
+                g.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + n.t + 0.05);
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + n.t + 0.2);
+                osc.connect(g);
+                g.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + n.t);
+                osc.stop(audioCtx.currentTime + n.t + 0.25);
             });
         }
 
-        function handleKey(l) {
-            if (modal.style.display === 'block') return;
-            const target = wordsList[currentIndex].word;
-            const next = target[typedText.length];
-
-            if (l === next) {
-                typedText += l;
-                renderWord();
-                if (typedText === target) success();
-            } else {
-                oops();
-            }
-        }
-
-        function success() {
-            wordsCorrect++;
-            lizard.classList.add('dancing');
-            playABCLoop();
-
-            if (wordsCorrect < targetVictory) {
-                preloadImage(currentIndex + 1);
-            }
-
-            setTimeout(() => {
-                lizard.classList.remove('dancing');
-                const scrollY = wordsCorrect * 480;
-                world.style.transform = `translateY(${scrollY}px)`;
-
-                if (wordsCorrect >= targetVictory) {
-                    modal.style.display = 'block';
-                    lizard.classList.add('dancing');
-                } else {
-                    currentIndex = (currentIndex + 1) % wordsList.length;
-                    showWord();
-                }
-            }, 7000);
-        }
-
-        function oops() {
-            lizard.classList.add('farting');
-            playRealisticFart();
+        function createFartCloud() {
             const cloud = document.createElement('div');
-            cloud.className = 'fart-cloud';
-            cloud.innerText = '💨';
-            lizard.appendChild(cloud);
-            setTimeout(() => {
-                lizard.classList.remove('farting');
-                typedText = "";
-                renderWord();
-                setTimeout(() => cloud.remove(), 1500);
-            }, 800);
+            cloud.className = 'fart-cloud text-5xl';
+            cloud.innerHTML = '💨';
+            const liz = document.getElementById('lizard');
+            const rect = liz.getBoundingClientRect();
+            // Position near the tail spiral
+            cloud.style.left = `${rect.left + 80}px`;
+            cloud.style.top = `${rect.top + 40}px`;
+            document.body.appendChild(cloud);
+            setTimeout(() => cloud.remove(), 1000);
         }
 
-        window.onkeydown = (e) => handleKey(e.key.toLowerCase());
+        function initGame() {
+            renderKeyboard();
+            loadWord();
+        }
 
-        createKeyboard();
-        showWord();
+        function loadWord() {
+            const currentObj = shuffledWords[currentWordIndex];
+            userInput = "";
+            document.getElementById('word-image').textContent = currentObj.icon;
+            const area = document.getElementById('spelling-area');
+            area.innerHTML = "";
+            
+            for (let i = 0; i < currentObj.word.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = "w-12 h-14 bg-white/10 rounded-xl border-2 border-white/20 text-4xl font-bold flex items-center justify-center text-emerald-300 shadow-lg";
+                slot.id = `slot-${i}`;
+                area.appendChild(slot);
+            }
+        }
+
+        function renderKeyboard() {
+            const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+            const container = document.querySelector('.grid');
+            container.innerHTML = "";
+            alphabet.forEach(letter => {
+                const key = document.createElement('div');
+                key.className = "keyboard-key bg-slate-800 text-white aspect-square flex items-center justify-center rounded-2xl text-2xl font-bold shadow-[0_4px_0_#1e293b] border border-white/5 active:shadow-none active:translate-y-1";
+                key.textContent = letter;
+                key.onclick = () => handleInput(letter);
+                container.appendChild(key);
+            });
+
+            const back = document.createElement('div');
+            back.className = "keyboard-key bg-red-600/80 text-white col-span-2 flex items-center justify-center rounded-2xl text-lg font-black uppercase shadow-[0_4px_0_#7f1d1d] active:shadow-none active:translate-y-1";
+            back.textContent = "clear";
+            back.onclick = () => { userInput = ""; updateSlots(); };
+            container.appendChild(back);
+        }
+
+        function handleInput(letter) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const target = shuffledWords[currentWordIndex].word;
+            if (userInput.length < target.length) {
+                userInput += letter;
+                updateSlots();
+
+                if (userInput.length === target.length) {
+                    setTimeout(checkAnswer, 200);
+                }
+            }
+        }
+
+        function updateSlots() {
+            const target = shuffledWords[currentWordIndex].word;
+            for (let i = 0; i < target.length; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                if (slot) slot.textContent = userInput[i] || "";
+            }
+        }
+
+        function checkAnswer() {
+            const target = shuffledWords[currentWordIndex].word;
+            if (userInput === target) {
+                onCorrect();
+            } else {
+                onWrong();
+            }
+        }
+
+        function onCorrect() {
+            score++;
+            const liz = document.getElementById('lizard');
+            const progress = document.getElementById('progress-fill');
+            const feedback = document.getElementById('feedback-msg');
+
+            feedback.textContent = "Super Spelling!";
+            feedback.classList.remove('translate-y-2');
+            feedback.style.opacity = 1;
+            
+            // Visual chameleon response
+            const paths = liz.querySelectorAll('.chameleon-skin');
+            paths.forEach(p => p.style.fill = '#facc15'); // Turns yellow when happy
+            
+            setTimeout(() => {
+                feedback.style.opacity = 0;
+                feedback.classList.add('translate-y-2');
+                paths.forEach(p => p.style.fill = ''); // Turns back to green
+            }, 2500);
+
+            playCelebrationMelody();
+            liz.classList.add('dancing');
+            setTimeout(() => liz.classList.remove('dancing'), 7000);
+
+            // Move Lizard up the tree
+            const treeHeight = document.querySelector('.tree-trunk').offsetHeight;
+            const climbStep = (treeHeight - 180) / targetScore;
+            liz.style.bottom = `${60 + (score * climbStep)}px`;
+            
+            progress.style.width = `${(score / targetScore) * 100}%`;
+
+            if (score >= targetScore) {
+                setTimeout(() => {
+                    document.getElementById('win-modal').classList.remove('hidden');
+                }, 3000);
+            } else {
+                currentWordIndex++;
+                if (currentWordIndex >= shuffledWords.length) {
+                    currentWordIndex = 0;
+                    shuffledWords.sort(() => Math.random() - 0.5);
+                }
+                setTimeout(loadWord, 1500);
+            }
+        }
+
+        function onWrong() {
+            playFartSound();
+            userInput = "";
+            const feedback = document.getElementById('feedback-msg');
+            feedback.textContent = "Try again!";
+            feedback.classList.add('text-red-400');
+            feedback.classList.remove('translate-y-2');
+            feedback.style.opacity = 1;
+            
+            const area = document.getElementById('spelling-area');
+            area.classList.add('animate-ping');
+            
+            setTimeout(() => {
+                feedback.style.opacity = 0;
+                feedback.classList.add('translate-y-2');
+                feedback.classList.remove('text-red-400');
+                area.classList.remove('animate-ping');
+                updateSlots();
+            }, 1000);
+        }
+
+        window.onload = initGame;
     </script>
 </body>
 </html>
