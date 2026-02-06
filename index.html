@@ -53,8 +53,8 @@
         }
 
         @keyframes dance {
-            0% { transform: translateX(-50%) translateY(0) rotate(-5deg) scale(1.1); }
-            100% { transform: translateX(-50%) translateY(-10px) rotate(5deg) scale(1.2); }
+            0% { transform: translateX(-50%) translateY(0) rotate(-8deg) scale(1.1); }
+            100% { transform: translateX(-50%) translateY(-15px) rotate(8deg) scale(1.2); }
         }
 
         .fart-cloud {
@@ -67,7 +67,7 @@
         @keyframes poof {
             0% { transform: scale(0.5); opacity: 0; }
             30% { transform: scale(1.2); opacity: 0.8; }
-            100% { transform: scale(2); opacity: 0; }
+            100% { transform: scale(2.5); opacity: 0; }
         }
 
         .keyboard-key {
@@ -82,7 +82,7 @@
         }
 
         .modal-overlay {
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
         }
 
@@ -91,174 +91,151 @@
             transition: fill 0.5s;
         }
 
-        /* Subtle "breathing" effect for the chameleon */
         .lizard-svg {
             animation: breathe 4s ease-in-out infinite;
         }
 
         @keyframes breathe {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            50% { transform: scale(1.03); }
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col md:flex-row items-stretch text-white">
+<body class="h-screen w-screen flex flex-col md:flex-row items-stretch text-white overflow-hidden">
 
     <!-- Game World -->
     <div class="relative flex-1 rainforest-bg overflow-hidden flex justify-center">
         <!-- The Tree -->
         <div class="tree-trunk h-full">
-            <!-- Decorative Leaves -->
             <div class="leaf w-24 h-12 top-10 -left-16 rotate-12"></div>
             <div class="leaf w-28 h-14 top-1/4 -right-20 -rotate-45"></div>
             <div class="leaf w-20 h-10 top-1/2 -left-14 rotate-45"></div>
             <div class="leaf w-32 h-16 top-3/4 -right-24 rotate-12"></div>
-            <div class="leaf w-24 h-12 top-[90%] -left-16 -rotate-12"></div>
             
-            <!-- Other Animals -->
             <div class="absolute top-[18%] -left-20 text-5xl opacity-90 drop-shadow-lg" title="Parrot">🦜</div>
             <div class="absolute top-[48%] -right-18 text-5xl opacity-90 drop-shadow-lg" title="Monkey">🐒</div>
             <div class="absolute top-[78%] -left-18 text-5xl opacity-90 drop-shadow-lg" title="Snake">🐍</div>
 
-            <!-- The Detailed Chameleon -->
             <div id="lizard" class="lizard absolute left-1/2 -translate-x-1/2 z-20" style="bottom: 60px;">
                 <svg class="lizard-svg" width="100" height="80" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Tail (Spiral) -->
                     <path id="tail" d="M85,55 Q115,55 115,75 Q115,95 95,95 Q75,95 75,80 Q75,68 88,68 Q95,68 95,78" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" />
-                    
-                    <!-- Back Feet -->
                     <path d="M70,55 L75,75 Q77,80 85,80" fill="none" stroke="#15803d" stroke-width="5" stroke-linecap="round" />
-                    
-                    <!-- Body (High Arched Back) -->
                     <path class="chameleon-skin" d="M25,60 Q55,10 85,55 L85,65 Q55,75 25,65 Z" stroke="#15803d" stroke-width="2" />
-                    
-                    <!-- Skin Patterns (Spots) -->
                     <circle cx="45" cy="40" r="3" fill="#22c55e" opacity="0.6" />
                     <circle cx="55" cy="30" r="4" fill="#22c55e" opacity="0.6" />
                     <circle cx="65" cy="35" r="3" fill="#22c55e" opacity="0.6" />
-
-                    <!-- Front Feet -->
                     <path d="M40,65 L35,80 Q33,85 25,85" fill="none" stroke="#15803d" stroke-width="5" stroke-linecap="round" />
-                    
-                    <!-- Head with Casque (Crest) -->
                     <path class="chameleon-skin" d="M30,62 L5,68 L2,48 L15,30 Q28,25 35,45 Z" stroke="#15803d" stroke-width="2" />
-                    
-                    <!-- Bulging Turret Eye -->
                     <g transform="translate(18, 52)">
                         <circle r="8" fill="#4ade80" stroke="#15803d" stroke-width="1" />
                         <circle r="3" fill="black" />
-                        <circle cx="-1" cy="-1" r="1" fill="white" opacity="0.5" />
                     </g>
                 </svg>
             </div>
         </div>
-
-        <!-- Sunlight overlay -->
-        <div class="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-yellow-400/10 pointer-events-none"></div>
     </div>
 
     <!-- UI Panel -->
-    <div class="flex-none w-full md:w-[450px] bg-slate-900 border-t-4 md:border-t-0 md:border-l-4 border-emerald-500 p-6 flex flex-col gap-6 items-center shadow-2xl relative z-30">
+    <div class="flex-none w-full md:w-[450px] bg-slate-900 border-t-4 md:border-t-0 md:border-l-4 border-emerald-500 p-6 flex flex-col gap-4 items-center shadow-2xl relative z-30">
         
-        <!-- Word Preview Area -->
-        <div class="bg-white/5 border border-white/10 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-4 shadow-inner">
-            <div id="word-image" class="text-9xl mb-2 filter drop-shadow-2xl animate-pulse">🐱</div>
-            <div id="spelling-area" class="flex gap-3 h-16 items-center justify-center">
-                <!-- Word slots will be injected here -->
-            </div>
+        <div class="bg-white/5 border border-white/10 rounded-3xl p-6 w-full text-center flex flex-col items-center gap-2 shadow-inner">
+            <div id="word-image" class="text-8xl mb-2 filter drop-shadow-2xl animate-pulse">🐱</div>
+            <div id="spelling-area" class="flex gap-2 h-14 items-center justify-center"></div>
         </div>
 
-        <!-- Progress Bar -->
-        <div class="w-full bg-slate-800 rounded-full h-5 p-1 border border-white/10 shadow-lg">
+        <div class="w-full bg-slate-800 rounded-full h-4 p-1 border border-white/10">
             <div id="progress-fill" class="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 rounded-full w-0 transition-all duration-700 ease-out"></div>
         </div>
 
-        <!-- Keyboard Area -->
-        <div class="grid grid-cols-7 gap-2 w-full max-w-[400px]">
-            <!-- Keys will be generated by JS -->
-        </div>
+        <div id="keyboard" class="grid grid-cols-7 gap-1.5 w-full max-w-[400px]"></div>
 
-        <div id="feedback-msg" class="h-8 text-yellow-400 font-bold text-2xl tracking-wide transition-all duration-300 opacity-0 transform translate-y-2">
-            Perfect!
-        </div>
+        <div id="feedback-msg" class="h-8 text-yellow-400 font-bold text-xl transition-all duration-300 opacity-0">Super!</div>
     </div>
 
     <!-- Win Modal -->
     <div id="win-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-12 rounded-[3rem] text-center shadow-[0_0_100px_rgba(52,211,153,0.3)] border-4 border-yellow-400 max-w-sm mx-4">
-            <div class="text-7xl mb-6 animate-bounce">👑</div>
-            <h2 class="text-5xl font-black mb-4 text-yellow-300 drop-shadow-md">WELL DONE!</h2>
-            <p class="text-xl mb-8 font-medium">You reached the top of the tree!</p>
-            <button onclick="location.reload()" class="bg-yellow-400 text-slate-900 px-10 py-5 rounded-2xl font-black text-2xl hover:bg-yellow-300 transform transition hover:scale-105 shadow-[0_10px_0_#ca8a04] active:translate-y-1 active:shadow-none">Play Again</button>
+        <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-10 rounded-[2.5rem] text-center shadow-2xl border-4 border-yellow-400 max-w-sm mx-4">
+            <div class="text-7xl mb-4">👑</div>
+            <h2 class="text-4xl font-black mb-4 text-yellow-300">WELL DONE!</h2>
+            <p class="text-lg mb-8 font-medium">You reached the top of the tree!</p>
+            <button onclick="location.reload()" class="bg-yellow-400 text-slate-900 px-10 py-4 rounded-2xl font-black text-xl hover:bg-yellow-300 shadow-[0_6px_0_#ca8a04] active:translate-y-1 active:shadow-none transition-all">Play Again</button>
         </div>
     </div>
 
     <script>
         const words = [
-            { word: 'cat', icon: '🐱' },
-            { word: 'dog', icon: '🐶' },
-            { word: 'rat', icon: '🐀' },
-            { word: 'bat', icon: '🦇' },
-            { word: 'fish', icon: '🐟' },
-            { word: 'frog', icon: '🐸' },
-            { word: 'pig', icon: '🐷' },
-            { word: 'log', icon: '🪵' },
-            { word: 'bug', icon: '🪲' },
-            { word: 'bird', icon: '🐦' },
-            { word: 'sun', icon: '☀️' },
-            { word: 'hat', icon: '👒' }
+            { word: 'cat', icon: '🐱' }, { word: 'dog', icon: '🐶' },
+            { word: 'rat', icon: '🐀' }, { word: 'bat', icon: '🦇' },
+            { word: 'fish', icon: '🐟' }, { word: 'frog', icon: '🐸' },
+            { word: 'pig', icon: '🐷' }, { word: 'log', icon: '🪵' },
+            { word: 'bug', icon: '🪲' }, { word: 'bird', icon: '🐦' },
+            { word: 'sun', icon: '☀️' }, { word: 'hat', icon: '👒' }
         ];
 
-        let currentWordIndex = 0;
-        let userInput = "";
-        let score = 0;
-        const targetScore = 6;
+        let currentWordIndex = 0, userInput = "", score = 0, targetScore = 6;
         let shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
-        // Audio Context Setup
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
+        // --- OPTIMIZED AUDIO SYSTEM ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function createTone(freq, type, start, duration, volume) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime + start);
+            gain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + start + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + start);
+            osc.stop(audioCtx.currentTime + start + duration);
+        }
 
         function playFartSound() {
+            // Complex fart synthesis for realism
+            const duration = 0.6;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + duration);
             
-            // Frequency drop for "realistic" effect
-            osc.frequency.setValueAtTime(110, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+            const lfo = audioCtx.createOscillator();
+            lfo.type = 'square';
+            lfo.frequency.setValueAtTime(25, audioCtx.currentTime);
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.setValueAtTime(20, audioCtx.currentTime);
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc.frequency);
             
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
             
             osc.connect(gain);
             gain.connect(audioCtx.destination);
+            lfo.start();
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-
+            osc.stop(audioCtx.currentTime + duration);
+            lfo.stop(audioCtx.currentTime + duration);
             createFartCloud();
         }
 
-        function playCelebrationMelody() {
-            // Simplified "ABC" style melody
-            const notes = [
-                { f: 261.63, t: 0 }, { f: 261.63, t: 0.25 }, { f: 392.00, t: 0.5 }, 
-                { f: 392.00, t: 0.75 }, { f: 440.00, t: 1.0 }, { f: 440.00, t: 1.25 }, 
-                { f: 392.00, t: 1.5 }
+        function playABC() {
+            // "A-B-C, Easy as 1-2-3" Synthesized Melody
+            const tempo = 0.22;
+            const melody = [
+                { f: 311.13, t: 0, d: 0.2 },    // Eb4 (A)
+                { f: 349.23, t: 1, d: 0.2 },    // F4  (B)
+                { f: 392.00, t: 2, d: 0.4 },    // G4  (C)
+                { f: 0,      t: 3.5, d: 0.1 },  // --pause--
+                { f: 311.13, t: 4, d: 0.2 },    // Eb4 (1)
+                { f: 349.23, t: 5, d: 0.2 },    // F4  (2)
+                { f: 392.00, t: 6, d: 0.6 },    // G4  (3)
             ];
             
-            notes.forEach(n => {
-                const osc = audioCtx.createOscillator();
-                const g = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(n.f, audioCtx.currentTime + n.t);
-                g.gain.setValueAtTime(0, audioCtx.currentTime + n.t);
-                g.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + n.t + 0.05);
-                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + n.t + 0.2);
-                osc.connect(g);
-                g.connect(audioCtx.destination);
-                osc.start(audioCtx.currentTime + n.t);
-                osc.stop(audioCtx.currentTime + n.t + 0.25);
+            melody.forEach(note => {
+                if(note.f > 0) createTone(note.f, 'triangle', note.t * tempo, note.d, 0.2);
             });
         }
 
@@ -268,9 +245,8 @@
             cloud.innerHTML = '💨';
             const liz = document.getElementById('lizard');
             const rect = liz.getBoundingClientRect();
-            // Position near the tail spiral
             cloud.style.left = `${rect.left + 80}px`;
-            cloud.style.top = `${rect.top + 40}px`;
+            cloud.style.top = `${rect.top + 30}px`;
             document.body.appendChild(cloud);
             setTimeout(() => cloud.remove(), 1000);
         }
@@ -286,10 +262,9 @@
             document.getElementById('word-image').textContent = currentObj.icon;
             const area = document.getElementById('spelling-area');
             area.innerHTML = "";
-            
             for (let i = 0; i < currentObj.word.length; i++) {
                 const slot = document.createElement('div');
-                slot.className = "w-12 h-14 bg-white/10 rounded-xl border-2 border-white/20 text-4xl font-bold flex items-center justify-center text-emerald-300 shadow-lg";
+                slot.className = "w-10 h-12 bg-white/10 rounded-lg border border-white/20 text-3xl font-bold flex items-center justify-center text-emerald-300";
                 slot.id = `slot-${i}`;
                 area.appendChild(slot);
             }
@@ -297,18 +272,17 @@
 
         function renderKeyboard() {
             const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
-            const container = document.querySelector('.grid');
+            const container = document.getElementById('keyboard');
             container.innerHTML = "";
             alphabet.forEach(letter => {
                 const key = document.createElement('div');
-                key.className = "keyboard-key bg-slate-800 text-white aspect-square flex items-center justify-center rounded-2xl text-2xl font-bold shadow-[0_4px_0_#1e293b] border border-white/5 active:shadow-none active:translate-y-1";
+                key.className = "keyboard-key bg-slate-800 text-white aspect-square flex items-center justify-center rounded-xl text-xl font-bold shadow-[0_3px_0_#1e293b] border border-white/5";
                 key.textContent = letter;
                 key.onclick = () => handleInput(letter);
                 container.appendChild(key);
             });
-
             const back = document.createElement('div');
-            back.className = "keyboard-key bg-red-600/80 text-white col-span-2 flex items-center justify-center rounded-2xl text-lg font-black uppercase shadow-[0_4px_0_#7f1d1d] active:shadow-none active:translate-y-1";
+            back.className = "keyboard-key bg-red-600/80 text-white col-span-2 flex items-center justify-center rounded-xl text-sm font-black uppercase shadow-[0_3px_0_#7f1d1d]";
             back.textContent = "clear";
             back.onclick = () => { userInput = ""; updateSlots(); };
             container.appendChild(back);
@@ -316,15 +290,11 @@
 
         function handleInput(letter) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const target = shuffledWords[currentWordIndex].word;
             if (userInput.length < target.length) {
                 userInput += letter;
                 updateSlots();
-
-                if (userInput.length === target.length) {
-                    setTimeout(checkAnswer, 200);
-                }
+                if (userInput.length === target.length) setTimeout(checkAnswer, 200);
             }
         }
 
@@ -338,11 +308,7 @@
 
         function checkAnswer() {
             const target = shuffledWords[currentWordIndex].word;
-            if (userInput === target) {
-                onCorrect();
-            } else {
-                onWrong();
-            }
+            userInput === target ? onCorrect() : onWrong();
         }
 
         function onCorrect() {
@@ -351,35 +317,27 @@
             const progress = document.getElementById('progress-fill');
             const feedback = document.getElementById('feedback-msg');
 
-            feedback.textContent = "Super Spelling!";
-            feedback.classList.remove('translate-y-2');
+            feedback.textContent = "Amazing!";
             feedback.style.opacity = 1;
-            
-            // Visual chameleon response
             const paths = liz.querySelectorAll('.chameleon-skin');
-            paths.forEach(p => p.style.fill = '#facc15'); // Turns yellow when happy
+            paths.forEach(p => p.style.fill = '#facc15');
             
             setTimeout(() => {
                 feedback.style.opacity = 0;
-                feedback.classList.add('translate-y-2');
-                paths.forEach(p => p.style.fill = ''); // Turns back to green
+                paths.forEach(p => p.style.fill = '');
             }, 2500);
 
-            playCelebrationMelody();
+            playABC();
             liz.classList.add('dancing');
-            setTimeout(() => liz.classList.remove('dancing'), 7000);
+            setTimeout(() => liz.classList.remove('dancing'), 5000);
 
-            // Move Lizard up the tree
             const treeHeight = document.querySelector('.tree-trunk').offsetHeight;
             const climbStep = (treeHeight - 180) / targetScore;
             liz.style.bottom = `${60 + (score * climbStep)}px`;
-            
             progress.style.width = `${(score / targetScore) * 100}%`;
 
             if (score >= targetScore) {
-                setTimeout(() => {
-                    document.getElementById('win-modal').classList.remove('hidden');
-                }, 3000);
+                setTimeout(() => document.getElementById('win-modal').classList.remove('hidden'), 3500);
             } else {
                 currentWordIndex++;
                 if (currentWordIndex >= shuffledWords.length) {
@@ -395,18 +353,11 @@
             userInput = "";
             const feedback = document.getElementById('feedback-msg');
             feedback.textContent = "Try again!";
-            feedback.classList.add('text-red-400');
-            feedback.classList.remove('translate-y-2');
             feedback.style.opacity = 1;
-            
-            const area = document.getElementById('spelling-area');
-            area.classList.add('animate-ping');
-            
+            document.getElementById('spelling-area').classList.add('animate-ping');
             setTimeout(() => {
                 feedback.style.opacity = 0;
-                feedback.classList.add('translate-y-2');
-                feedback.classList.remove('text-red-400');
-                area.classList.remove('animate-ping');
+                document.getElementById('spelling-area').classList.remove('animate-ping');
                 updateSlots();
             }, 1000);
         }
