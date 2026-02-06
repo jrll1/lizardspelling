@@ -17,7 +17,7 @@
             background: #061d12;
             height: var(--vh);
             overflow: hidden;
-            touch-action: none; /* Prevents unwanted zooming/scrolling on mobile */
+            touch-action: none;
         }
 
         .rainforest-bg {
@@ -31,7 +31,6 @@
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
 
-        /* Improved Tree Bark Texture */
         .tree-trunk::after {
             content: '';
             position: absolute;
@@ -116,33 +115,30 @@
 </head>
 <body class="flex flex-col md:flex-row items-stretch text-white">
 
-    <!-- Start Overlay (Unlocks Audio on Mobile) -->
+    <!-- Start Overlay (Unlocks Audio on Mobile Safari) -->
     <div id="start-overlay" class="fixed inset-0 flex items-center justify-center p-6 text-center">
         <div class="max-w-md">
             <h1 class="text-4xl font-black text-emerald-400 mb-4">CHAMELEON CLIMB</h1>
             <p class="text-xl mb-8">Help the chameleon reach the top!</p>
             <button id="start-btn" class="bg-yellow-400 text-slate-900 px-12 py-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#ca8a04] active:translate-y-2 active:shadow-none transition-all uppercase">
-                Tap to Play
+                Tap to Start
             </button>
         </div>
     </div>
 
-    <!-- Game World (Tree View) -->
+    <!-- Game World -->
     <div class="relative flex-[1.2] rainforest-bg overflow-hidden flex justify-center">
         <div class="tree-trunk h-full">
-            <!-- Dynamic Leaf Distribution -->
             <div class="leaf w-16 h-8 top-10 -left-10 rotate-12"></div>
             <div class="leaf w-20 h-10 top-[20%] -right-12 -rotate-45"></div>
             <div class="leaf w-16 h-8 top-[40%] -left-10 rotate-45"></div>
             <div class="leaf w-24 h-12 top-[60%] -right-14 rotate-12"></div>
             <div class="leaf w-18 h-9 top-[80%] -left-12 -rotate-12"></div>
             
-            <!-- Animals -->
-            <div class="absolute top-[18%] -left-14 text-4xl opacity-90" title="Parrot">🦜</div>
-            <div class="absolute top-[48%] -right-14 text-4xl opacity-90" title="Monkey">🐒</div>
-            <div class="absolute top-[78%] -left-14 text-4xl opacity-90" title="Snake">🐍</div>
+            <div class="absolute top-[18%] -left-14 text-4xl opacity-90">🦜</div>
+            <div class="absolute top-[48%] -right-14 text-4xl opacity-90">🐒</div>
+            <div class="absolute top-[78%] -left-14 text-4xl opacity-90">🐍</div>
 
-            <!-- The Chameleon -->
             <div id="lizard" class="lizard absolute left-1/2 -translate-x-1/2 z-20" style="bottom: 40px;">
                 <svg class="lizard-svg" width="90" height="70" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
                     <path id="tail" d="M85,55 Q115,55 115,75 Q115,95 95,95 Q75,95 75,80 Q75,68 88,68 Q95,68 95,78" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" />
@@ -161,9 +157,8 @@
         </div>
     </div>
 
-    <!-- UI Panel (Word & Keyboard) -->
+    <!-- UI Panel -->
     <div class="flex-none h-auto md:w-[450px] bg-slate-900 border-t-4 md:border-t-0 md:border-l-4 border-emerald-500 p-4 md:p-6 flex flex-col gap-3 items-center shadow-2xl relative z-30">
-        
         <div class="bg-white/5 border border-white/10 rounded-2xl p-4 w-full text-center flex flex-col items-center gap-2">
             <div id="word-image" class="text-7xl mb-1 filter drop-shadow-xl animate-pulse">🐱</div>
             <div id="spelling-area" class="flex gap-2 h-12 items-center justify-center"></div>
@@ -173,7 +168,6 @@
             <div id="progress-fill" class="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 rounded-full w-0 transition-all duration-700 ease-out"></div>
         </div>
 
-        <!-- Keyboard: Not stretching to edges, larger touch targets -->
         <div class="px-2 w-full">
             <div id="keyboard" class="grid grid-cols-7 gap-1.5 md:gap-2 w-full max-w-[380px] mx-auto"></div>
         </div>
@@ -204,27 +198,36 @@
         let currentWordIndex = 0, userInput = "", score = 0, targetScore = 6;
         let shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
-        // --- MOBILE OPTIMIZED AUDIO ---
+        // --- SAFARI OPTIMIZED AUDIO ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
 
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
+        async function initAudio() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new AudioContext();
+                }
+                
+                // Safari requires resume even after creation inside a gesture
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
+
+                // Important: Play a silent buffer immediately to fully "warm up" the hardware
+                const source = audioCtx.createBufferSource();
+                source.buffer = audioCtx.createBuffer(1, 1, 22050);
+                source.connect(audioCtx.destination);
+                source.start(0);
+                
+                return true;
+            } catch (e) {
+                console.error("Audio init failed", e);
+                return false;
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            // Prime with a silent buffer
-            const buffer = audioCtx.createBuffer(1, 1, 22050);
-            const source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioCtx.destination);
-            source.start();
         }
 
         function createTone(freq, type, start, duration, volume) {
-            if (!audioCtx) return;
+            if (!audioCtx || audioCtx.state !== 'running') return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
@@ -239,7 +242,7 @@
         }
 
         function playFartSound() {
-            if (!audioCtx) return;
+            if (!audioCtx || audioCtx.state !== 'running') return;
             const duration = 0.5;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -268,7 +271,7 @@
         }
 
         function playABC() {
-            if (!audioCtx) return;
+            if (!audioCtx || audioCtx.state !== 'running') return;
             const t = 0.22;
             const notes = [
                 { f: 311.13, s: 0 }, { f: 349.23, s: 1 }, { f: 392.00, s: 2 },
@@ -290,8 +293,8 @@
         }
 
         // --- GAME LOGIC ---
-        document.getElementById('start-btn').onclick = () => {
-            initAudio();
+        document.getElementById('start-btn').onclick = async () => {
+            await initAudio();
             document.getElementById('start-overlay').classList.add('hidden');
             initGame();
         };
@@ -323,7 +326,13 @@
                 const key = document.createElement('div');
                 key.className = "keyboard-key bg-slate-800 text-white aspect-square flex items-center justify-center rounded-xl text-xl font-bold shadow-[0_3px_0_#1e293b] border border-white/5";
                 key.textContent = letter;
-                key.onclick = () => handleInput(letter);
+                key.onclick = async () => {
+                    // Try to resume on every tap, just in case iOS suspended the context
+                    if (audioCtx && audioCtx.state === 'suspended') {
+                        await audioCtx.resume();
+                    }
+                    handleInput(letter);
+                };
                 container.appendChild(key);
             });
             const back = document.createElement('div');
@@ -334,7 +343,6 @@
         }
 
         function handleInput(letter) {
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             const target = shuffledWords[currentWordIndex].word;
             if (userInput.length < target.length) {
                 userInput += letter;
